@@ -59,8 +59,13 @@ def get_function_list(function_list: list):
 
     for func_str in function_list:
         func_without_br = func_str.split("(")[0].split(' ')
-        return_type = func_without_br[0]
-        function_name = func_without_br[1]
+        type_with_name = func_str.split('(')[0]
+        if len(re.findall('\*|\&', type_with_name)) != 0:
+            return_type = "".join(re.findall('.*?[(?<=\ ).*]', type_with_name))
+        else:
+            return_type = " ".join(func_without_br[:-1])
+        function_name = "".join(re.split('.*?[\*|\ ]', type_with_name)[-1])
+
         function_params_list = []
         raw_params = func_str.split("(")[1].split(",")
 
@@ -68,8 +73,13 @@ def get_function_list(function_list: list):
             param = " ".join(param.replace(")", '').replace(";", '').split())
 
             if len(param) > 0 and param != 'void':
-                param = param.split(' ')
-                function_param = FunctionParam(param[0], param[1])
+                if len(re.findall('\*|\&', param)) != 0:
+                    param_type = re.findall('.*?[\*|\&]', param)[0]
+                    param_name = re.split(".*?[\*|\&]", param)[-1]
+                else:
+                    param_type = " ".join((param.split(' '))[:-1])
+                    param_name = re.split(".*?[\ ]", param)[-1]
+                function_param = FunctionParam(param_type, param_name)
                 function_params_list.append(function_param)
 
         func = Function(function_name, return_type, function_params_list)
